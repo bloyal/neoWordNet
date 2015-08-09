@@ -8,8 +8,21 @@
 # --------------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 
+#' Create a WordNet graph database in Neo4j
+#'
+#' \code{createNeoWordNet} processes WordNet index and data files and returns a
+#' graph object for further analysis. This requires approximately 425 MB of
+#' storage and can take several hours to complete. (Approximately 6 hours on a
+#' 2 GHz Intel Core 2 Duo MacBook with 4 GB of 1067 MHz DDR3 memory)
+#'
+#' @param dictPath A path to the WordNet data and index files. Defaults to working directory.
+#' @param verbose Should the function provide progress details? Defaults to true.
+#' @param url Location of (running) Neo4j graph database. Defaults to local host.
+#' @param username Username for Neo4j graph database access. Defaults to "neo4j"
+#' @param password Password for Neo4j graph database access. Defaults to "graph"
 createNeoWordNet <- function(dictPath = paste(getwd(), "dict", sep = "/"),
-                             verbose = TRUE, username = "neo4j", password = "graph") {
+                             verbose = TRUE, url = "http://localhost:7474/db/data/",
+                             username = "neo4j", password = "graph") {
   if (verbose) {
     print(paste(Sys.time(), "Starting graph creation", sep = ": "))
   }
@@ -18,7 +31,7 @@ createNeoWordNet <- function(dictPath = paste(getwd(), "dict", sep = "/"),
   }
 
   # Initialize graph
-  graph <- newGraph(username = username, password = password)
+  graph <- newGraph(url = url, username = username, password = password)
 
   # Create nodes representing the 45 lexicographer file names
   createLexNodes(graph, dictPath, verbose = verbose)
