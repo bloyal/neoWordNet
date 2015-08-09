@@ -9,6 +9,7 @@
 #' @param dest Destination path for WordNet files.
 #' @param verbose Should the function provide progress details? Defaults to
 #'   true.
+#' @export
 downloadWordNetFiles <- function(wordNetUrl = "http://wordnetcode.princeton.edu/wn3.1.dict.tar.gz",
                                  dest = getwd(), verbose = TRUE) {
   if (verbose) {

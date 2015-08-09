@@ -10,6 +10,7 @@
 #'   WordNet graph instance (i.e. using the \code{startGraph} function from the
 #'   RNeo4j package).
 #' @param word The English word to query for.
+#' @export
 getWordInfo <- function(graph, word) {
   # get semantic pointer info
   query <- "match (a:Word {name:{word}})-[r:has_synset]->(b:Synset),\n          (b)-[r2:has_pointer]->(c)<-[r3:has_synset]-(d:Word)\n          return a.name as word, b.posName as pos, r.wordNum as sense, b.gloss as gloss, b.lexFileName as lexFile, r2.pointerType as pointer, r2.relation as pointerType, d.name as pointerWord\n          order by a.name, b.posName, r.wordNum, r2.pointerType, r3.wordNum"

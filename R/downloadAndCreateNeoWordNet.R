@@ -19,6 +19,7 @@
 #'   host.
 #' @param username Username for Neo4j graph database access. Defaults to "neo4j"
 #' @param password Password for Neo4j graph database access. Defaults to "graph"
+#' @export
 downloadAndCreateNeoWordNet <- function(wordNetUrl = "http://wordnetcode.princeton.edu/wn3.1.dict.tar.gz",
                                         dest = getwd(), url = "http://localhost:7474/db/data/", username = "neo4j", password = "graph", verbose = TRUE) {
   # Test before creating entire graph!

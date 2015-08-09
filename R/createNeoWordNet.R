@@ -20,6 +20,7 @@
 #' @param url Location of (running) Neo4j graph database. Defaults to local host.
 #' @param username Username for Neo4j graph database access. Defaults to "neo4j"
 #' @param password Password for Neo4j graph database access. Defaults to "graph"
+#' @export
 createNeoWordNet <- function(dictPath = paste(getwd(), "dict", sep = "/"),
                              verbose = TRUE, url = "http://localhost:7474/db/data/",
                              username = "neo4j", password = "graph") {
