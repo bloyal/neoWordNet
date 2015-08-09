@@ -1,9 +1,6 @@
 # createNeoWordNet.R Functions for creating a WordNet db in Neo4j
 
-# library(RNeo4j)
-# library(R.utils)
-# library(stringr)
-# library(plyr)
+
 
 # --------------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
@@ -21,6 +18,7 @@
 #' @param username Username for Neo4j graph database access. Defaults to "neo4j"
 #' @param password Password for Neo4j graph database access. Defaults to "graph"
 #' @export
+#' @import RNeo4j
 createNeoWordNet <- function(dictPath = paste(getwd(), "dict", sep = "/"),
                              verbose = TRUE, url = "http://localhost:7474/db/data/",
                              username = "neo4j", password = "graph") {
@@ -58,14 +56,14 @@ createNeoWordNet <- function(dictPath = paste(getwd(), "dict", sep = "/"),
   if (verbose) {
     print(paste(Sys.time(), "Creating pointer frame", sep = ": "))
   }
-  pointerFrame <- ldply(lapply(wordNetData, getSynsetPointerFrame))
+  pointerFrame <- plyr::ldply(lapply(wordNetData, getSynsetPointerFrame))
   createSemanticPointers(graph, pointerFrame[pointerFrame$startWordNum ==
                                                0, ], verbose = verbose)
 
   if (verbose) {
     print(paste(Sys.time(), "Creating word frame", sep = ": "))
   }
-  wordFrame <- ldply(lapply(wordNetData, getWordFrame))
+  wordFrame <- plyr::ldply(lapply(wordNetData, getWordFrame))
 
   # Create lexical pointers
   pointerFrame <- getLexicalPointerWords(pointerFrame[pointerFrame$startWordNum !=
@@ -76,7 +74,7 @@ createNeoWordNet <- function(dictPath = paste(getwd(), "dict", sep = "/"),
   if (verbose) {
     print(paste(Sys.time(), "Creating verb frame frame", sep = ": "))
   }
-  verbFrameFrame <- ldply(apply(wordNetData$verb, 1, transformSynsetDataToFrameMap))
+  verbFrameFrame <- plyr::ldply(apply(wordNetData$verb, 1, transformSynsetDataToFrameMap))
   createVerbFrameRelationships(graph, verbFrameFrame, verbose = verbose)
 
   if (verbose) {
@@ -106,7 +104,7 @@ getLexNames <- function(verbose) {
   if (verbose) {
     print(paste(Sys.time(), "Retrieving lex file names", sep = ": "))
   }
-  lexData <- read.table("lexnames", sep = "\t", col.names = c("fileNumber",
+  lexData <- utils::read.table("lexnames", sep = "\t", col.names = c("fileNumber",
                                                               "fileName", "synCat"), stringsAsFactors = FALSE)
   lexData$synCat <- updateSynCat(lexData$synCat)
   lexData["description"] <- getLexDescriptions()
@@ -122,7 +120,7 @@ updateSynCat <- function(synCat) {
 }
 
 getLexDescriptions <- function(path = "lexFileLookup.csv") {
-  lexDesc <- read.csv(path)
+  lexDesc <- utils::read.csv(path)
   lexDesc <- lexDesc$Contents  #[2:length(lexDesc$Contents)];
   capitalize(lexDesc)
 }
@@ -140,7 +138,7 @@ createFrameNodes <- function(graph, verbose = TRUE) {
   if (verbose) {
     print(paste(Sys.time(), "Creating verb sentance frame nodes", sep = ": "))
   }
-  frameData <- read.csv("verbFrameLookup.csv", stringsAsFactors = FALSE)
+  frameData <- utils::read.csv("verbFrameLookup.csv", stringsAsFactors = FALSE)
   addIndex(graph, "VerbFrame", "number")
   bulkGraphUpdate(graph, frameData, createSingleVerbFrame)
 }
@@ -181,7 +179,7 @@ readVerbData <- function(path = "~/Downloads/WordNet-3.0/dict", verbose = TRUE) 
 }
 
 removeFramesFromPointers <- function(verbData) {
-  verbData$pointers <- str_replace(verbData$pointers, " \\d{2} \\+ \\d{2} \\d{2}.*$",
+  verbData$pointers <- stringr::str_replace(verbData$pointers, " \\d{2} \\+ \\d{2} \\d{2}.*$",
                                    "")
   return(verbData)
 }
@@ -222,16 +220,16 @@ processSynsetData <- function(synsetData) {
 }
 
 matchSynsetParts <- function(dataRecord) {
-  str_match_all(dataRecord, "^(\\d{8}) (\\d{2}) ([nvasr]) (\\w{2}) (.+) \\| (.+)$")
+  stringr::str_match_all(dataRecord, "^(\\d{8}) (\\d{2}) ([nvasr]) (\\w{2}) (.+) \\| (.+)$")
 }
 
 convertSynsetPartsToDf <- function(synsetParts) {
-  ldply(synsetParts, function(x) data.frame(synsetId = calcSynsetId(x[2],
+  plyr::ldply(synsetParts, function(x) data.frame(synsetId = calcSynsetId(x[2],
                                                                     x[4]), synsetOffset = x[2], lexFilenum = x[3], lexFileName = translateLexFilenum(x[3]),
                                             pos = x[4], posName = translatePOS(x[4]), wCnt = strtoi(x[5], 16),
-                                            words = str_match(x[6], "(^.+ [0-9a-f]{1}) (\\d{3})(\\s|$)")[2],
-                                            pCnt = as.integer(str_match(x[6], "(^.+ [0-9a-f]{1}) (\\d{3})(\\s|$)")[3]),
-                                            pointers = str_match(x[6], "\\d{3} (.+$)")[2], frames = str_match(x[6],
+                                            words = stringr::str_match(x[6], "(^.+ [0-9a-f]{1}) (\\d{3})(\\s|$)")[2],
+                                            pCnt = as.integer(stringr::str_match(x[6], "(^.+ [0-9a-f]{1}) (\\d{3})(\\s|$)")[3]),
+                                            pointers = stringr::str_match(x[6], "\\d{3} (.+$)")[2], frames = stringr::str_match(x[6],
                                                                                                               "\\W(\\d{2} \\+ \\d{2} .+)$")[2], gloss = x[7], stringsAsFactors = FALSE))
 }
 
@@ -281,7 +279,7 @@ readPOSWordIndex <- function(dictPath, verbose = TRUE) {
   verbData <- readVerbWordData(dictPath, verbose)
   adjData <- readAdjWordData(dictPath, verbose)
   nounData <- readNounWordData(dictPath, verbose)
-  ldply(list(adv = advData, verb = verbData, adj = adjData, noun = nounData))
+  plyr::ldply(list(adv = advData, verb = verbData, adj = adjData, noun = nounData))
 }
 
 readAdvWordData <- function(path = "~/Downloads/WordNet-3.0/dict", verbose = TRUE) {
@@ -324,13 +322,13 @@ readPosWordDataFile <- function(path = "~/Downloads/WordNet-3.0/dict/data.verb",
 }
 
 processWordData <- function(wordData, posCode) {
-  words <- ldply(str_match_all(wordData, "^(\\S+) ([arnv] .+ \\d) (\\d{8}.*)"))[,
+  words <- plyr::ldply(stringr::str_match_all(wordData, "^(\\S+) ([arnv] .+ \\d) (\\d{8}.*)"))[,
                                                                                 c(2, 4)]
   names(words) = c("name", "synsetOffset")
-  ldply(apply(words, 1, function(line) {
-    synsetOffsets <- str_match_all(line["synsetOffset"], "(\\S{8})")[[1]][,
+  plyr::ldply(apply(words, 1, function(line) {
+    synsetOffsets <- stringr::str_match_all(line["synsetOffset"], "(\\S{8})")[[1]][,
                                                                           1]
-    df <- data.frame(name = str_replace_all(str_to_lower(line["name"]),
+    df <- data.frame(name = stringr::str_replace_all(stringr::str_to_lower(line["name"]),
                                             "_", " "), synsetId = calcSynsetId(synsetOffsets, posCode),
                      stringsAsFactors = FALSE, row.names = NULL)
     cbind(df, wordNum = as.numeric(rownames(df)))
@@ -366,7 +364,7 @@ createSingleSynsetWordRelationship <- function(transaction, data) {
 # Create word frame
 getWordFrame <- function(synsetData) {
   z <- apply(synsetData, 1, transformSynsetDataToWordMap)
-  ldply(z)
+  plyr::ldply(z)
 }
 
 # Process single line of synset data (inside apply) to create a narrow
@@ -374,7 +372,7 @@ getWordFrame <- function(synsetData) {
 transformSynsetDataToWordMap <- function(synsetLine) {
   offset <- synsetLine["synsetOffset"]
   pos <- synsetLine["pos"]
-  words <- str_replace_all(str_to_lower(str_match_all(synsetLine["words"],
+  words <- stringr::str_replace_all(stringr::str_to_lower(stringr::str_match_all(synsetLine["words"],
                                                       "(\\S+) [0-9a-f]")[[1]][, 2]), "_", " ")
   df <- data.frame(synsetId = calcSynsetId(offset, pos), name = words,
                    stringsAsFactors = FALSE, row.names = NULL)
@@ -387,7 +385,7 @@ transformSynsetDataToWordMap <- function(synsetLine) {
 
 getSynsetPointerFrame <- function(synsetData) {
   z <- apply(synsetData[synsetData$pCnt > 0, ], 1, transformSynsetDataToSynPointerMap)
-  z <- ldply(z)
+  z <- plyr::ldply(z)
   y <- cbind(z, pointerType = translateMultiPointerSymbols(z$pointerSymbol,
                                                            z$startPOS), stringsAsFactors = FALSE)
 }
@@ -397,7 +395,7 @@ getSynsetPointerFrame <- function(synsetData) {
 transformSynsetDataToSynPointerMap <- function(synsetLine) {
   startPOS <- synsetLine["pos"]
   startId <- calcSynsetId(synsetLine["synsetOffset"], synsetLine["pos"])
-  pointers <- str_match_all(synsetLine["pointers"], "(\\S{1,2}) (\\d{8}) ([nvasr]) ([0-9a-f]{2})([0-9a-f]{2})")[[1]]
+  pointers <- stringr::str_match_all(synsetLine["pointers"], "(\\S{1,2}) (\\d{8}) ([nvasr]) ([0-9a-f]{2})([0-9a-f]{2})")[[1]]
   endPOS <- pointers[, 4]
   endId <- calcSynsetId(pointers[, 3], pointers[, 4])
   data.frame(startId = startId, pointerSymbol = pointers[, 2], endId = endId,
@@ -495,7 +493,7 @@ createVerbFrameRelationships <- function(graph, verbFrameFrame, verbose) {
 # data frame
 transformSynsetDataToFrameMap <- function(synsetLine) {
   startId <- calcSynsetId(synsetLine["synsetOffset"], synsetLine["pos"])
-  frames <- ldply(strsplit(str_match_all(synsetLine["frames"], "(\\d{2} [0-9a-f]{2})")[[1]][,
+  frames <- plyr::ldply(strsplit(stringr::str_match_all(synsetLine["frames"], "(\\d{2} [0-9a-f]{2})")[[1]][,
                                                                                             1], " "))
   frameFrame <- data.frame(startId = startId, frameNumber = as.numeric(frames$V1),
                            wordNum = strtoi(frames$V2, 16), stringsAsFactors = FALSE, row.names = NULL)
