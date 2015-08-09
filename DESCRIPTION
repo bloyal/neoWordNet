@@ -15,4 +15,6 @@ Imports: plyr (>= 1.8.3),
     RNeo4j (>= 1.4.2),
     R.utils (>= 2.1.0),
     utils
-Suggests: testthat (>= 0.10.0)
+Suggests: testthat (>= 0.10.0),
+    knitr
+VignetteBuilder: knitr
