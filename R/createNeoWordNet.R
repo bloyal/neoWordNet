@@ -31,6 +31,7 @@ createNeoWordNet <- function(dictPath = paste(getwd(), "dict", sep = "/"),
 
   # Initialize graph
   graph <- newGraph(url = url, username = username, password = password)
+  if(typeof(graph)!="list"){return(FALSE)}
 
   # Create nodes representing the 45 lexicographer file names
   createLexNodes(graph, dictPath, verbose = verbose)
@@ -104,7 +105,7 @@ getLexNames <- function(verbose) {
   if (verbose) {
     print(paste(Sys.time(), "Retrieving lex file names", sep = ": "))
   }
-  lexData <- utils::read.table("lexnames", sep = "\t", col.names = c("fileNumber",
+  lexData <- utils::read.table(system.file("extdata", "lexnames", package = "neoWordNet"), sep = "\t", col.names = c("fileNumber",
                                                               "fileName", "synCat"), stringsAsFactors = FALSE)
   lexData$synCat <- updateSynCat(lexData$synCat)
   lexData["description"] <- getLexDescriptions()
@@ -119,10 +120,10 @@ updateSynCat <- function(synCat) {
   return(synCat)
 }
 
-getLexDescriptions <- function(path = "lexFileLookup.csv") {
+getLexDescriptions <- function(path = system.file("extdata", "lexFileLookup.csv", package = "neoWordNet")) {
   lexDesc <- utils::read.csv(path)
   lexDesc <- lexDesc$Contents  #[2:length(lexDesc$Contents)];
-  capitalize(lexDesc)
+  R.utils::capitalize(lexDesc)
 }
 
 createSingleLexNode <- function(transaction, data) {
@@ -138,7 +139,7 @@ createFrameNodes <- function(graph, verbose = TRUE) {
   if (verbose) {
     print(paste(Sys.time(), "Creating verb sentance frame nodes", sep = ": "))
   }
-  frameData <- utils::read.csv("verbFrameLookup.csv", stringsAsFactors = FALSE)
+  frameData <- utils::read.csv(system.file("extdata", "verbFrameLookup.csv", package = "neoWordNet"), stringsAsFactors = FALSE)
   addIndex(graph, "VerbFrame", "number")
   bulkGraphUpdate(graph, frameData, createSingleVerbFrame)
 }

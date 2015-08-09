@@ -2,16 +2,21 @@
 # db in Neo4j
 
 # Start empty Neo4j graph
-newGraph <- function(url = "http://localhost:7474/db/data/", username = "neo4j", 
+newGraph <- function(url = "http://localhost:7474/db/data/", username = "neo4j",
                      password = "graph") {
-  graph <- startGraph(url, username, password)
-  clear(graph, input = FALSE)
+  graph <- tryCatch({
+    startGraph(url, username, password)},
+    error = function(c){
+      print("R was unable to access a Neo4j graph database at the specified url. Please ensure that you have installed Neo4j using the instructions at http://neo4j.com/download/ and started it correctly (e.g. by running 'bin/neo4j start' on the command line).")
+      return(FALSE);
+    })
+  if(typeof(graph)=="list") {clear(graph, input = FALSE)}
   return(graph)
 }
 
 # Helper function to optimize Neo4j transaction sizes May want to try
 # and vectorize this
-bulkGraphUpdate <- function(graph, data, creationFunction, transactionMax = 1000, 
+bulkGraphUpdate <- function(graph, data, creationFunction, transactionMax = 1000,
                             verbose = TRUE) {
   t <- newTransaction(graph)
   transactionCounter <- 0
@@ -42,7 +47,7 @@ printIteration <- function(currentVal, maxVal, divisor) {
 createExampleNodes <- function(transaction, data) {
   query <- "CREATE (a:Node {startNodeId:{startNodeId}})-[b:HAS_REL {relId:{relId}}]->(c:Node {endNodeId:{endNodeId}})"
   print(query)
-  appendCypher(transaction, query, startNodeId = data$START_NODE_ID, 
+  appendCypher(transaction, query, startNodeId = data$START_NODE_ID,
                relId = data$REL_ID, endNodeId = data$END_NODE_ID)
 }
 
@@ -52,7 +57,7 @@ countNodesbyLabel <- function(graph, label) {
 }
 
 countRelationshipsByLabel <- function(graph, label) {
-  query <- paste("MATCH (a)-[r]->(b) WHERE type(r)='", label, "' RETURN r", 
+  query <- paste("MATCH (a)-[r]->(b) WHERE type(r)='", label, "' RETURN r",
                  sep = "")
   nodes <- getRels(graph, query)
   return(length(nodes))

@@ -1,8 +1,8 @@
-# downloadWordNetFiles.R
+# getWordNetFiles.R
 
 #' Download WordNet database files
 #'
-#' \code{downloadWordNetFiles} downloads and processes WordNet index and
+#' \code{getWordNetFiles.R} downloads and processes WordNet index and
 #' data files for later load into Neo4j
 #' @param wordNetUrl URL for the desired version of the WordNet database files.
 #'   Defaults to version 3.1.
@@ -10,7 +10,7 @@
 #' @param verbose Should the function provide progress details? Defaults to
 #'   true.
 #' @export
-downloadWordNetFiles <- function(wordNetUrl = "http://wordnetcode.princeton.edu/wn3.1.dict.tar.gz",
+getWordNetFiles <- function(wordNetUrl = "http://wordnetcode.princeton.edu/wn3.1.dict.tar.gz",
                                  dest = getwd(), verbose = TRUE) {
   if (verbose) {
     print(paste("Downloading dictionary files from ", wordNetUrl, sep = ""))
@@ -21,7 +21,7 @@ downloadWordNetFiles <- function(wordNetUrl = "http://wordnetcode.princeton.edu/
   if (verbose) {
     print("Unzipping dictionary files")
   }
-  gunzip(destFile)
+  R.utils::gunzip(destFile)
   tarFile <- substr(destFile, 0, nchar(destFile) - 3)
   untar(tarFile)
 

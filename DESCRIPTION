@@ -8,10 +8,11 @@ Authors@R: person("Brian", "Loyal", email = "bloyal@gmail.com",
 Description: Easily create an instance of Princeton University's WordNet in a Neo4j
     graph database. The resulting graph can then be modified to include addtional parameters
     and queried using the web client or APIs.
-License: MIT
+License: MIT + file LICENSE
 LazyData: TRUE
 Imports: plyr (>= 1.8.3),
     stringr (>= 1.0.0),
     RNeo4j (>= 1.4.2),
-    R.utils (>= 2.1.0)
+    R.utils (>= 2.1.0),
+    utils
 Suggests: testthat (>= 0.10.0)
