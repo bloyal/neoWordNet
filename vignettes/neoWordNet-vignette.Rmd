@@ -1,6 +1,6 @@
 ---
-title: "Vignette Title"
-author: "Vignette Author"
+title: "Creating a WordNet Graph Database with neoWordNet"
+author: "Brian Loyal"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -9,50 +9,101 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+[WordNet](https://wordnet.princeton.edu/wordnet/) is an open-source lexical database of the English language developed and maintained by Princeton University. It structures words together into groups of cognitive synonyms, or "synsets", representing a unique concept. The neoWordNet package allows you to easily create your own WordNet instance in [Neo4j](http://neo4j.com/), a leading graph database.
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+## Installation and Setup
 
-## Vignette Info
+neoWordNet can be installed using devtools::install_github:
 
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
-
-## Styles
-
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
-
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
-
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+```r
+install.packages("devtools")
+devtools::install_github("bloyal/neoWordNet")
+library(neoWordNet)
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
+From this point on, make sure that you have a Neo4j database installed and running. For more information about downloading and installing Neo4j, please visit the [Neo4j Download Page](http://neo4j.com/download/).
 
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
+Once everything is installed, you can start your Neo4j database from the command line with something like this (exact process will vary based on OS):
 
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
+```r
+> bin/neo4j start
 ```
 
-Also a quote using `>`:
+## Creating a WordNet Graph Database
 
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
+The following command will download the necessary WordNet database files from wordnet.pinceton.edu, stage them in the `dest` folder, and begin the process of loading the data into Neo4j.
+
+```r
+graph <- getAndCreateNeoWn(dest="Users/Brian/Downloads",
+url="http://localhost:7474/db/data/", username="neo4j",password="password")
+```
+
+Depending on your system, it may take several hours to complete the graph creation (It requires between 6 and 6.5 hours on a 2 GHz Intel Core 2 Duo MacBook with 4 GB of 1067 MHz DDR3 memory). The resulting database requires approximately 425 MB of storage.
+
+The `getAndCreateNeoWn` function returns a `graph` object which can be used with Nicole White's [RNeo4j](https://github.com/nicolewhite/RNeo4j) package to query and modify the database.
+
+## Analyzing WordNet Data
+
+neoWordNet comes with a basic function for returning sense information and related terms for a given word. 
+
+```r
+getWordInfo(graph, word="hound")
+```
+
+This returns a dataframe containing part-of-speech, gloss, and lexicographer file information for all senses of the word. For each sense, it also includes pointer information for each sense.
+
+For more complex analysis, use the `cypher` function in RNeo4j to return query results as a dataframe
+
+```r
+cypher(graph, "match (a:Word {name:'hound'})-[:has_synset]->(b:Synset) return a.name, b.pos, b.gloss")
+```
+```r
+##  a.word  b.pos b.gloss
+##  hound   n     any of several breeds of dog...
+##  hound   n     someone who is morally reprehensible...
+##  hound   n     pursue or chase relentlessly...
+```
+
+## Database information
+
+The WordNet graph that generated from this package includes four types of node objects:
+
+* Words: These represent a unique list of lowercase values index.pos files. There is a single word node for all pos instances of that node
+* Synsets: These are generated from the data.pos files and are pos-specific. These provide sense information for one or more words.
+* LexNames: There are 45 of these, one for each of the Lexicographer file names listed in the [WordNet documentation](https://wordnet.princeton.edu/wordnet/man/lexnames.5WN.html). These are primarily used to classify synsets into high-level groups (e.g. "nouns denoting animals")
+* VerbFrames: There are 35 of these, one for each of the generic sentence frames listed in [the WordNet documentation](https://wordnet.princeton.edu/wordnet/man/wninput.5WN.html#sect4). These provide additional contextual information for verb synsets.
+
+These nodes are linked to each other based on one or more relationship objects.
+
+### Relationship: has_synset
+Word nodes can be linked to a synset node via a "has_synset" relationship. These are 1:1 relationships, althought a single word can have seperate relationships to many synsets.
+```r
+(Word) -[has_synset]-> (Synset)
+```
+has_synet relationships include a "wordNum" parameter that lists out the synset order specified in the appropriate index.pos file. These rankings are pos specific, so for example a word with 2 noun senses and 1 verb sense will have
+```r
+(Word) -[has_synset {wordNum:1}]-> (Noun Synset 1)
+(Word) -[has_synset {wordNum:2}]-> (Noun Synset 2)
+(Word) -[has_synset {wordNum:1}]-> (Verb Synset 1)
+```
+### Relationship: has_pointer
+Synsets can be linked to other synsets and words to other words via "has_pointer" relationships. Each of these relationships has a "pointerType" parameter based on the pointer symbol conversions found in the [WordNet documentation](https://wordnet.princeton.edu/wordnet/man/wninput.5WN.html#sect3).
+
+NOTE: Nound synset 07569690 is an exception case in that it contains 3 pointers using the "\\" symbol ordinarily associated only to adjectives ("Pertainym (pertains to noun)" or adverbs ("Derived from adjective"). Since these relationshps are between a noun and three adjectives, they are described in neoWordNet as "Pertainym (pertains to noun)".
+
+Synset-synset pointers have "relation:Semantic" properties, while word-word pointers have "relation:Lexical" properties.
+```r
+(Synset 1) -[has_pointer {relation:'Semantic'}]-> (Synset 2)
+(Word 1) -[has_pointer {relation:'Lexical'}]-> (Word)
+```
+### Relationship: has_lexicographer_file
+Each synsets is linked to a single LexFile node via a "has_lexicographer_file" relationship. These relationships serve to group synsets into high-level categories
+```r
+(Synset) -[has_lexicographer_file]-> (LexFile)
+```
+### Relationship: has_sentence_frame
+Each verb synset node is linked to one or more VerbFrame nodes via a "has_sentence_frame" relationship. Some words can also be linked directly to a sentence frame in a similar way. 
+```r
+(Synset) -[has_sentence_frame]-> (VerbFrame)
+(Word) -[has_sentence_frame]-> (VerbFrame)
+```
