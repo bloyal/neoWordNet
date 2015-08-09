@@ -1,10 +1,17 @@
 Package: neoWordNet
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1
+Title: Create a WordNet database in Neo4j with R
+Version: 0.0.0.9000
 Date: 2015-08-08
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Authors@R: person("Brian", "Loyal", email = "bloyal@gmail.com",
+  role = c("aut", "cre"))
+Description: Easily create an instance of Princeton University's WordNet in a Neo4j
+    graph database. The resulting graph can then be modified to include addtional parameters
+    and queried using the web client or APIs.
+License: MIT
 LazyData: TRUE
+Imports: plyr (>=1.8.3),
+    stringr (>= 1.0.0),
+    RNeo4j (>= 1.4.2),
+    R.utils (>= 2.1.0)
+Suggests: testthat (>=0.10.0)
