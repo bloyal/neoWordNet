@@ -55,7 +55,7 @@ This returns a dataframe containing part-of-speech, gloss, and lexicographer fil
 For more complex analysis, use the `cypher` function in RNeo4j to return query results as a dataframe
 
 ```r
-cypher(graph, "match (a:Word {name:'hound'})-[:has_synset]->(b:Synset) return a.name, b.pos, b.gloss")
+cypher(graph, "match (a:Word {name:'hound'})-[:HAS_SYNSET]->(b:Synset) return a.name, b.pos, b.gloss")
 ```
 ```r
 ##  a.word  b.pos b.gloss
@@ -78,13 +78,13 @@ These nodes are linked to each other based on one or more relationship objects.
 ### Relationship: has_synset
 Word nodes can be linked to a synset node via a "has_synset" relationship. These are 1:1 relationships, althought a single word can have seperate relationships to many synsets.
 ```r
-(Word) -[has_synset]-> (Synset)
+(Word) -[:HAS_SYNSET]-> (Synset)
 ```
 has_synet relationships include a "wordNum" parameter that lists out the synset order specified in the appropriate index.pos file. These rankings are pos specific, so for example a word with 2 noun senses and 1 verb sense will have
 ```r
-(Word) -[has_synset {wordNum:1}]-> (Noun Synset 1)
-(Word) -[has_synset {wordNum:2}]-> (Noun Synset 2)
-(Word) -[has_synset {wordNum:1}]-> (Verb Synset 1)
+(Word) -[:HAS_SYNSET {wordNum:1}]-> (Noun Synset 1)
+(Word) -[:HAS_SYNSET {wordNum:2}]-> (Noun Synset 2)
+(Word) -[:HAS_SYNSET {wordNum:1}]-> (Verb Synset 1)
 ```
 ### Relationship: has_pointer
 Synsets can be linked to other synsets and words to other words via "has_pointer" relationships. Each of these relationships has a "pointerType" parameter based on the pointer symbol conversions found in the [WordNet documentation](https://wordnet.princeton.edu/wordnet/man/wninput.5WN.html#sect3).
@@ -93,17 +93,17 @@ NOTE: Nound synset 07569690 is an exception case in that it contains 3 pointers 
 
 Synset-synset pointers have "relation:Semantic" properties, while word-word pointers have "relation:Lexical" properties.
 ```r
-(Synset 1) -[has_pointer {relation:'Semantic'}]-> (Synset 2)
-(Word 1) -[has_pointer {relation:'Lexical'}]-> (Word)
+(Synset 1) -[:HAS_POINTER {relation:'Semantic'}]-> (Synset 2)
+(Word 1) -[:HAS_POINTER {relation:'Lexical'}]-> (Word)
 ```
 ### Relationship: has_lexicographer_file
 Each synsets is linked to a single LexFile node via a "has_lexicographer_file" relationship. These relationships serve to group synsets into high-level categories
 ```r
-(Synset) -[has_lexicographer_file]-> (LexFile)
+(Synset) -[:HAS_LEX_FILE]-> (LexFile)
 ```
 ### Relationship: has_sentence_frame
 Each verb synset node is linked to one or more VerbFrame nodes via a "has_sentence_frame" relationship. Some words can also be linked directly to a sentence frame in a similar way. 
 ```r
-(Synset) -[has_sentence_frame]-> (VerbFrame)
-(Word) -[has_sentence_frame]-> (VerbFrame)
+(Synset) -[:HAS_SENTENCE_FRAME]-> (VerbFrame)
+(Word) -[:HAS_SENTENCE_FRAME]-> (VerbFrame)
 ```

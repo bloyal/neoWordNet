@@ -267,7 +267,7 @@ createSingleSynsetNode <- function(transaction, data) {
 }
 
 createSingleSynsetLexRelationship <- function(transaction, data) {
-  query <- "MATCH (a:Synset {synsetId:{synsetId}}), (b:LexName {fileNumber:{fileNumber}})\n  CREATE (a)-[:has_lexicographer_file]->(b)"
+  query <- "MATCH (a:Synset {synsetId:{synsetId}}), (b:LexName {fileNumber:{fileNumber}})\n  CREATE (a)-[:HAS_LEX_FILE]->(b)"
   appendCypher(transaction, query, synsetId = data$synsetId, fileNumber = as.numeric(data$lexFilenum))
 }
 
@@ -352,7 +352,7 @@ createSingleWordNode <- function(transaction, data) {
 }
 
 createSingleSynsetWordRelationship <- function(transaction, data) {
-  query <- "MATCH (a:Word {name:{name}}), (b:Synset {synsetId:{synsetId}})\n  CREATE (a)-[:has_synset {wordNum:{wordNum}}]->(b)"
+  query <- "MATCH (a:Word {name:{name}}), (b:Synset {synsetId:{synsetId}})\n  CREATE (a)-[:HAS_SYNSET {wordNum:{wordNum}}]->(b)"
   appendCypher(transaction, query, synsetId = data$synsetId, name = data$name,
                wordNum = data$wordNum)
 }
@@ -413,7 +413,7 @@ createSemanticPointers <- function(graph, synsetPointerFrame, verbose = TRUE) {
 }
 
 createSingleSemanticPointer <- function(transaction, data) {
-  query <- "MATCH (a:Synset {synsetId:{startId}}), (b:Synset {synsetId:{endId}})\n  CREATE (a)-[:has_pointer {relation:'Semantic', pointerSymbol:{pointerSymbol}, pointerType:{pointerType}, synsetId:{startId}}]->(b)"
+  query <- "MATCH (a:Synset {synsetId:{startId}}), (b:Synset {synsetId:{endId}})\n  CREATE (a)-[:HAS_POINTER {relation:'Semantic', pointerSymbol:{pointerSymbol}, pointerType:{pointerType}, synsetId:{startId}}]->(b)"
 
   appendCypher(transaction, query, startId = data$startId, endId = data$endId,
                pointerSymbol = data$pointerSymbol, pointerType = data$pointerType)
@@ -462,7 +462,7 @@ createLexicalPointers <- function(graph, lexPointerFrame, verbose = TRUE) {
 }
 
 createSingleLexicalPointer <- function(transaction, data) {
-  query <- "MATCH (a:Word {name:{startWord}}), (b:Word {name:{endWord}})\n            CREATE (a)-[:has_pointer {relation:'Lexical', pointerSymbol:{pointerSymbol}, pointerType:{pointerType}, synsetId:{startId}}]->(b)"
+  query <- "MATCH (a:Word {name:{startWord}}), (b:Word {name:{endWord}})\n            CREATE (a)-[:HAS_POINTER {relation:'Lexical', pointerSymbol:{pointerSymbol}, pointerType:{pointerType}, synsetId:{startId}}]->(b)"
   appendCypher(transaction, query, startWord = data$startWord, endWord = data$endWord,
                pointerSymbol = data$pointerSymbol, pointerType = data$pointerType,
                startId = data$startId)
@@ -507,12 +507,12 @@ transformSynsetDataToFrameMap <- function(synsetLine) {
 }
 
 createSingleSynsetFrameRelationship <- function(transaction, data) {
-  query <- "MATCH (a:Synset {synsetId:{startId}}), (b:VerbFrame {number:{frameNumber}})\nCREATE (a)-[:has_sentence_frame {synsetId:{startId}}]->(b)"
+  query <- "MATCH (a:Synset {synsetId:{startId}}), (b:VerbFrame {number:{frameNumber}})\nCREATE (a)-[:HAS_SENTENCE_FRAME {synsetId:{startId}}]->(b)"
   appendCypher(transaction, query, startId = data$startId, frameNumber = data$frameNumber)
 }
 
 createSingleWordFrameRelationship <- function(transaction, data) {
-  query <- "MATCH (a:Word {name:{name}}), (b:VerbFrame {number:{frameNumber}})\nCREATE (a)-[:has_sentence_frame {synsetId:{synsetId}}]->(b)"
+  query <- "MATCH (a:Word {name:{name}}), (b:VerbFrame {number:{frameNumber}})\nCREATE (a)-[:HAS_SENTENCE_FRAME {synsetId:{synsetId}}]->(b)"
   appendCypher(transaction, query, name = data$word, frameNumber = data$frameNumber,
                synsetId = data$synsetId)
 }
