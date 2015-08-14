@@ -507,14 +507,14 @@ transformSynsetDataToFrameMap <- function(synsetLine) {
 }
 
 createSingleSynsetFrameRelationship <- function(transaction, data) {
-  query <- "MATCH (a:Synset {synsetId:{startId}}), (b:VerbFrame {number:{frameNumber}})\n            CREATE (a)-[:has_sentence_frame {synsetId:{startId}}]->(b)"
+  query <- "MATCH (a:Synset {synsetId:{startId}}), (b:VerbFrame {number:{frameNumber}})\nCREATE (a)-[:has_sentence_frame {synsetId:{startId}}]->(b)"
   appendCypher(transaction, query, startId = data$startId, frameNumber = data$frameNumber)
 }
 
 createSingleWordFrameRelationship <- function(transaction, data) {
-  query <- "MATCH (a:Word {name:{name}}), (b:VerbFrame {number:{frameNumber}})\n            CREATE (a)-[:has_sentence_frame {synsetOffset:{synsetOffset}, synsetPOS:{synsetPOS}}]->(b)"
+  query <- "MATCH (a:Word {name:{name}}), (b:VerbFrame {number:{frameNumber}})\nCREATE (a)-[:has_sentence_frame {synsetId:{synsetId}}]->(b)"
   appendCypher(transaction, query, name = data$word, frameNumber = data$frameNumber,
-               synsetOffset = data$startOffset, synsetPOS = data$startPOS)
+               synsetId = data$synsetId)
 }
 
 # --------------------------------------------------------------------------------------
