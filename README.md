@@ -1,9 +1,4 @@
----
-title: "neoWordNet"
-author: "Brian Loyal"
-date: "August 9, 2015"
-output: html_document
----
+# neoWordNet
 
 [WordNet](https://wordnet.princeton.edu/wordnet/) is an open-source lexical database of the English language. It structures words together into groups of cognitive synonyms, or "synsets", representing a unique concept. The neoWordNet package allows you to easily create your own WordNet instance in [Neo4j](http://neo4j.com/), a leading graph database.
 
