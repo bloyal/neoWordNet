@@ -16,6 +16,10 @@ getWordNetFiles <- function(wordNetUrl = "http://wordnetcode.princeton.edu/wn3.1
     print(paste("Downloading dictionary files from ", wordNetUrl, sep = ""))
   }
   destFile <- paste(dest, "wn.dict.tar.gz", sep = "/")
+
+  if (verbose) {
+    print(paste("Writing dictionary files to ", destFile, sep = ""))
+  }
   download.file(wordNetUrl, destFile)
 
   if (verbose) {
@@ -23,7 +27,7 @@ getWordNetFiles <- function(wordNetUrl = "http://wordnetcode.princeton.edu/wn3.1
   }
   R.utils::gunzip(destFile)
   tarFile <- substr(destFile, 0, nchar(destFile) - 3)
-  untar(tarFile)
+  untar(tarFile, exdir=dest)
 
   if (verbose) {
     print("Cleaning up temporary files")
